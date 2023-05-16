@@ -1,0 +1,5 @@
+.sf-tv-chart-container {
+  height: calc(100% - 25px);
+  position: relative;
+  margin-top: 1px;
+}

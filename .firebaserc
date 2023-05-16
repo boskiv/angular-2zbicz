@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "spreadfighter"
+  },
+  "targets": {
+    "spreadfighter": {
+      "hosting": {
+        "prod": [
+          "spreadfighter"
+        ],
+        "uat": [
+          "sf-uat"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

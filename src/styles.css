@@ -1,0 +1,185 @@
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.logo {
+  font-family: "Bebas Neue", cursive;
+}
+
+html,
+body {
+  height: 100vh;
+  overflow: hidden;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 300;
+}
+
+gridster {
+  @apply bg-primary/10 !important;
+  padding: 0 !important;
+}
+
+gridster-item {
+  background: #202020 !important;
+}
+
+.gridster-item-moving {
+  z-index: 10 !important;
+}
+
+:where(.table *:last-child) :where(*:last-child) :where(th, td):first-child {
+  border-radius: unset;
+}
+
+:where(.table *:last-child) :where(*:last-child) :where(th, td):last-child {
+  border-radius: unset;
+}
+
+.tooltip-container {
+  text-align: center;
+  z-index: 100;
+  position: fixed;
+  padding: 6px 12px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  line-height: initial;
+  color: white;
+  width: auto;
+  background: #111111ee;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translate(-50%, -30%);
+  animation: tooltip-slide 0.18s ease-out 0.5s;
+  animation-fill-mode: forwards;
+  pointer-events: none;
+}
+
+@keyframes tooltip-slide {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.text-xxs {
+  font-size: 0.6rem /* 12px */;
+  line-height: 0.6rem /* 16px */;
+}
+gridster .gridster-column,
+gridster .gridster-row,
+gridster .gridster-row {
+  opacity: 0.1;
+}
+.gridster-item-moving {
+  z-index: 10 !important;
+}
+
+.fit.display-grid gridster-item:after {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.tooltip:hover:before {
+  z-index: 10;
+}
+
+.btn {
+  font-weight: 300;
+}
+
+.table :where(thead, tfoot) :where(th, td) {
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "Ticking Timebomb BB";
+  src: url("assets/fonts/ticking-timebomb-bb.regular.ttf") format("truetype");
+}
+
+.clock-font {
+  font-family: "Ticking Timebomb BB", sans-serif;
+}
+.gridster-item-resizable-handler {
+  z-index: 100 !important;
+}
+
+ng-select {
+  border: 1px solid #444444;
+  background-color: #202020;
+}
+
+.ng-dropdown-panel {
+  background-color: #202020;
+  padding-top: 5px;
+  padding-left: 5px;
+  top: 22px;
+  left: -1px;
+  width: calc(100% + 1px);
+}
+.ng-placeholder {
+  color: #9ca3af;
+  top: 50%;
+  left: 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.ng-has-value .ng-placeholder {
+  display: none;
+}
+.ng-option:hover {
+  background-color: #2c2c2c;
+}
+.ng-option-selected {
+  background-color: #343434;
+}
+.ng-select-multiple .ng-value {
+  background-color: #343434;
+  margin-right: 5px;
+  padding-right: 5px;
+  padding-left: 5px;
+}
+.ng-select-multiple .ng-value-icon.left {
+  cursor: pointer;
+}
+.ng-select-multiple .ng-value-icon.left:hover {
+  background-color: #2c2c2c;
+}
+.ng-select-multiple .ng-value .ng-value-label {
+  padding-left: 5px;
+}
+.chatbro_messages_wrapper {
+  height: calc(100% - 37px) !important;
+}
+.chatbro_messages_empty {
+  display: table;
+  width: 100%;
+}
+.chatbro_body {
+  height: calc(100% - 60px) !important;
+}
+.chatbro_messages_space {
+  height: calc(100% - 205px) !important;
+}
+.chatbro_chat.chatbro_unmovable_chat.chatbro_opacity {
+  height: 100% !important;
+}
+.chatbro_modal_block {
+  height: 100% !important;
+}
+
+/*.table-compact :where(th, td) {*/
+/*  padding: 0.1rem !* 8px *!;*/
+/*  font-size: 0.7rem !* 14px *!;*/
+/*  line-height: 1rem !* 20px *!;*/
+/*}*/

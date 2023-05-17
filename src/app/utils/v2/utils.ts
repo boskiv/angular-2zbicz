@@ -193,24 +193,21 @@ export async function fetchManipulationBars(
   }
 
   const symbol = name.split('#')[0] + 'USDT';
-  console.log('fetchManipulationBars', name, from, to, resolution);
   const url = `${
     environment.manipulationApiURL
   }?symbol=${symbol}&timeFrame=${interval}&startTime=${from * 1000}&endTime=${
     to * 1000
   }`;
-  console.log('fetchManipulationBars', url);
   const response = await fetch(url);
   const data = await response.json();
-  console.log('fetchManipulationBars', data);
   if (data && data.length) {
     return data.map((d: any) => {
       return {
         time: d.timestamp,
-        open: Number(d.open),
-        high: Number(d.high),
-        low: Number(d.low),
-        close: Number(d.close),
+        close: ((1 - d.corrV) * 100) / 2,
+        open: ((1 - d.corr) * 100) / 2,
+        high: Number(0),
+        low: Number(0),
         volume: Number(0),
       };
     });
@@ -240,7 +237,7 @@ export async function fetchOpenInterestBars(
   const url = `${
     environment.openInterestApiURL
   }?symbol=${symbol}&timeFrame=${interval}&startTime=${from * 1000}&endTime=${
-    to * 1000
+    to * 1000 - 60000
   }`;
   const response = await fetch(url);
   const data = await response.json();
@@ -263,36 +260,3 @@ export interface IProject {
   ticker: string;
   slug: string;
 }
-
-export async function getAllSantimentProjects(): Promise<IProject[]> {
-  const init = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query: `
-          {
-            allProjects {
-              name
-              ticker
-              slug
-            }
-          }
-        `,
-      variables: {},
-    }),
-  };
-  const url = `https://api.santiment.net/graphql`;
-  const response = await fetch(url, init);
-  const data = await response.json();
-  return data.data.allProjects;
-}
-
-export const fillBarGaps = (bars: Bar[]) => {
-  bars.forEach((bar, i) => {
-    if (bars[i + 1]) {
-      bar.close = bars[i + 1].open;
-    }
-  });
-};

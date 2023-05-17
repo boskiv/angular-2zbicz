@@ -8,6 +8,9 @@ import {
   unsubscribeFromStream,
 } from '@app/utils/v2/streaming';
 import { IDatafeedChartApi, IExternalDatafeed } from '@assets/charting_library';
+import { Subscription } from 'rxjs';
+
+let subscriptions: Map<string, Subscription> = new Map<string, Subscription>();
 
 const datafeed: IDatafeedChartApi & IExternalDatafeed = {
   onReady: (callback) => {

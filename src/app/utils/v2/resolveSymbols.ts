@@ -113,80 +113,100 @@ export const resolveSymbol: IDatafeedChartApi['resolveSymbol'] = async (
     data_status: 'streaming',
   };
 
-  if (fullName.includes('#SANTIMENTS_')) {
-    let symbol = {
-      ...baseResolveSymbol,
-      visible_plots_set: 'c' as VisiblePlotsSet,
-      pricescale: 100,
-      exchange: EXCHANGES.SANTIMENT,
-      listed_exchange: EXCHANGES.SANTIMENT,
-    };
-    setTimeout(() => {
-      console.log('resolveSymbol', symbol.pricescale);
-      onSymbolResolvedCallback(symbol);
-    }, 0);
-  } else {
-    const symbols = await getAllSymbols();
-    Object.values(EXCHANGES).forEach((exchange) => {
-      fullName = fullName
-        .toUpperCase()
-        .replaceAll(`${exchange.toUpperCase()}:`, '');
-    });
-    // get all legs from fullname
-    const legs = findLegsName(fullName, true);
+  let symbol = {} as IExtendedLibrarySymbolInfo;
 
-    const priceScaleSymbols = (symbol: string): number => {
-      const legs = findLegsName(symbol, true);
-      const params: any = {};
-      const ar: number[] = [];
-      for (const leg of legs) {
-        for (const symbol of symbols) {
-          if (symbol.symbol === leg && symbol.filters) {
-            for (const filter of symbol.filters) {
-              if (filter.filterType === 'PRICE_FILTER' && filter.tickSize) {
-                params[leg] = parseFloat(filter.tickSize);
-                ar.push(parseFloat(filter.tickSize));
+  switch (true) {
+    case fullName.includes('#SF_MANIPULATION_MONITOR'):
+      symbol = {
+        ...baseResolveSymbol,
+        visible_plots_set: 'c' as VisiblePlotsSet,
+        pricescale: 100,
+        has_ticks: true,
+        exchange: EXCHANGES.MANIPULATIONS,
+        listed_exchange: EXCHANGES.MANIPULATIONS,
+      };
+      setTimeout(() => {
+        console.log('resolveSymbol', symbol.pricescale);
+        onSymbolResolvedCallback(symbol);
+      }, 0);
+      break;
+    case fullName.includes('#SANTIMENTS_'):
+      symbol = {
+        ...baseResolveSymbol,
+        visible_plots_set: 'c' as VisiblePlotsSet,
+        pricescale: 100,
+        exchange: EXCHANGES.SANTIMENT,
+        listed_exchange: EXCHANGES.SANTIMENT,
+      };
+      setTimeout(() => {
+        console.log('resolveSymbol', symbol.pricescale);
+        onSymbolResolvedCallback(symbol);
+      }, 0);
+      break;
+    default:
+      const symbols = await getAllSymbols();
+      Object.values(EXCHANGES).forEach((exchange) => {
+        fullName = fullName
+          .toUpperCase()
+          .replaceAll(`${exchange.toUpperCase()}:`, '');
+      });
+      // get all legs from fullname
+      const legs = findLegsName(fullName, true);
+
+      const priceScaleSymbols = (symbol: string): number => {
+        const legs = findLegsName(symbol, true);
+        const params: any = {};
+        const ar: number[] = [];
+        for (const leg of legs) {
+          for (const symbol of symbols) {
+            if (symbol.symbol === leg && symbol.filters) {
+              for (const filter of symbol.filters) {
+                if (filter.filterType === 'PRICE_FILTER' && filter.tickSize) {
+                  params[leg] = parseFloat(filter.tickSize);
+                  ar.push(parseFloat(filter.tickSize));
+                }
               }
             }
           }
         }
-      }
-      return Math.round(1 / Math.min(...ar));
-    };
-
-    if (legs.length) {
-      const allLegsSymbols = symbols.filter(({ full_name }) =>
-        legs.some((leg) => full_name.toUpperCase().endsWith(leg.toUpperCase()))
-      );
-
-      if (!allLegsSymbols.length) {
-        onResolveErrorCallback('cannot resolve symbol');
-        return;
-      }
-
-      const symbolInfo: IExtendedLibrarySymbolInfo = {
-        ticker: fullName,
-        full_name: fullName,
-        format: 'price',
-        listed_exchange: allLegsSymbols[0].exchange,
-        name: fullName,
-        description: fullName.replaceAll('USDT', '').replaceAll('BUSD', ''),
-        type: allLegsSymbols[0].type,
-        session: '24x7',
-        timezone: 'Etc/UTC',
-        exchange: allLegsSymbols[0].exchange,
-        minmov: 1,
-        pricescale: priceScaleSymbols(fullName),
-        has_intraday: true,
-        has_weekly_and_monthly: true,
-        supported_resolutions: CHART_CONFIG.supported_resolutions!,
-        volume_precision: 1,
-        data_status: 'streaming',
-        legs: legs,
-        allLegsSymbols: allLegsSymbols,
+        return Math.round(1 / Math.min(...ar));
       };
 
-      onSymbolResolvedCallback(symbolInfo);
-    }
+      if (legs.length) {
+        const allLegsSymbols = symbols.filter(({ full_name }) =>
+          legs.some((leg) =>
+            full_name.toUpperCase().endsWith(leg.toUpperCase())
+          )
+        );
+
+        if (!allLegsSymbols.length) {
+          onResolveErrorCallback('cannot resolve symbol');
+          return;
+        }
+
+        const symbolInfo: IExtendedLibrarySymbolInfo = {
+          ticker: fullName,
+          full_name: fullName,
+          format: 'price',
+          listed_exchange: allLegsSymbols[0].exchange,
+          name: fullName,
+          description: fullName.replaceAll('USDT', '').replaceAll('BUSD', ''),
+          type: allLegsSymbols[0].type,
+          session: '24x7',
+          timezone: 'Etc/UTC',
+          exchange: allLegsSymbols[0].exchange,
+          minmov: 1,
+          pricescale: priceScaleSymbols(fullName),
+          has_intraday: true,
+          has_weekly_and_monthly: true,
+          supported_resolutions: CHART_CONFIG.supported_resolutions!,
+          volume_precision: 1,
+          data_status: 'streaming',
+          legs: legs,
+          allLegsSymbols: allLegsSymbols,
+        };
+
+        onSymbolResolvedCallback(symbolInfo);
+      }
   }
 };

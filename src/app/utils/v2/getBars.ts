@@ -69,16 +69,15 @@ export const getBars: IDatafeedChartApi['getBars'] = async (
         bars = await fetchSantimentBars(symbolInfo.name, from, to, resolution);
         break;
       case EXCHANGES.MANIPULATIONS:
-        console.log('get manipulations');
         bars = await fetchManipulationBars(
           symbolInfo.name,
           from,
           to,
           resolution
         );
+        console.log('manipulations', bars);
         break;
       case EXCHANGES.OPEN_INTEREST:
-        console.log('get open interest');
         bars = await fetchOpenInterestBars(
           symbolInfo.name,
           from,

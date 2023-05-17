@@ -5,7 +5,6 @@ import {
   Input,
   OnDestroy,
 } from '@angular/core';
-import { IDashboardWidget } from '@app/dashboard/+state/dashboard.state';
 
 import { IBinanceDepth } from '@app/dashboard/services/binance.service';
 import {
@@ -111,8 +110,6 @@ export class TvChartContainerComponent implements OnDestroy, AfterViewInit {
   set autosize(autosize: ChartingLibraryWidgetOptions['autosize']) {
     this._autosize = autosize || this._autosize;
   }
-
-  item!: IDashboardWidget;
 
   constructor(private stopKillerService: StopKillerService) {}
   ngAfterViewInit(): void {

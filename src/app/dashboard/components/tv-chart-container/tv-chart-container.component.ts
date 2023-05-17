@@ -4,16 +4,8 @@ import {
   Component,
   Input,
   OnDestroy,
-  OnInit,
 } from '@angular/core';
-import {
-  ChangePaneInterval,
-  ChangePaneSymbol,
-} from '@app/dashboard/+state/dashboard.actions';
-import {
-  IDashboardStateModel,
-  IDashboardWidget,
-} from '@app/dashboard/+state/dashboard.state';
+import { IDashboardWidget } from '@app/dashboard/+state/dashboard.state';
 
 import { IBinanceDepth } from '@app/dashboard/services/binance.service';
 import {
@@ -38,9 +30,8 @@ import {
   ResolutionString,
   widget,
 } from '@assets/charting_library';
-import { Select, Store } from '@ngxs/store';
 import { forEach } from 'lodash';
-import { map, Observable, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'sf-tv-chart-container',
@@ -48,17 +39,13 @@ import { map, Observable, Subscription } from 'rxjs';
   styleUrls: ['./tv-chart-container.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TvChartContainerComponent
-  implements OnInit, OnDestroy, AfterViewInit
-{
+export class TvChartContainerComponent implements OnDestroy, AfterViewInit {
   private barColors = {
     up: '#089981',
     down: '#f23645',
   };
-  @Input()
-  itemId!: string;
 
-  private _symbol: ChartingLibraryWidgetOptions['symbol'] = 'BTCUSDT';
+  private _symbol = 'BTCUSDT';
   private _interval: ChartingLibraryWidgetOptions['interval'] =
     '1' as ResolutionString;
   // BEWARE: no trailing slash is expected in feed URL
@@ -126,12 +113,8 @@ export class TvChartContainerComponent
   }
 
   item!: IDashboardWidget;
-  @Select() private dashboard$!: Observable<IDashboardStateModel>;
 
-  constructor(
-    private stopKillerService: StopKillerService,
-    private store: Store
-  ) {}
+  constructor(private stopKillerService: StopKillerService) {}
   ngAfterViewInit(): void {
     function getLanguageFromURL(): LanguageCode | null {
       const regex = new RegExp('[?&]lang=([^&#]*)');
@@ -210,10 +193,7 @@ export class TvChartContainerComponent
         'paneProperties.background': '#1D1D1D',
         'paneProperties.backgroundType': 'solid',
       });
-      this.getStopKillerShapes(
-        this._tvWidget?.chart(),
-        this._symbol ?? 'BTCUSDT'
-      );
+      this.getStopKillerShapes(this._tvWidget?.chart(), this._symbol);
       this._tvWidget
         ?.chart()
         .onSymbolChanged()
@@ -226,12 +206,7 @@ export class TvChartContainerComponent
 
             this.getStopKillerShapes(this._tvWidget?.chart(), symbol);
 
-            this.store.dispatch(
-              new ChangePaneSymbol({
-                id: this.itemId,
-                symbol,
-              })
-            );
+            this._symbol = symbol;
           }
         });
       this._tvWidget
@@ -239,46 +214,11 @@ export class TvChartContainerComponent
         .onIntervalChanged()
         .subscribe(null, (interval) => {
           this._interval = interval;
-          this.getStopKillerShapes(
-            this._tvWidget?.chart(),
-            this.item.meta.symbol
-          );
+          this.getStopKillerShapes(this._tvWidget?.chart(), this._symbol);
 
-          this.store.dispatch(
-            new ChangePaneInterval({
-              id: this.itemId,
-              interval,
-            })
-          );
+          this._interval = interval;
         });
     });
-  }
-
-  ngOnInit() {
-    this.subscriptions.push(
-      this.store.subscribe((e: { dashboard: IDashboardStateModel }) => {
-        this.item =
-          e.dashboard.layouts[e.dashboard.currentLayoutID].widgets[this.itemId];
-      }),
-      this.dashboard$
-        .pipe(
-          map(
-            (value) => value.layouts[value.currentLayoutID].widgets[this.itemId]
-          )
-        )
-        .subscribe((e) => {
-          if (e) {
-            if (e.meta.symbol !== this._symbol) {
-              this._symbol = e.meta.symbol || this._symbol;
-              this._tvWidget?.chart().setSymbol(e.meta.symbol);
-            }
-            if (e.meta.interval !== this._interval) {
-              this._interval = e.meta.interval || this._interval;
-            }
-            this.item = e;
-          }
-        })
-    );
   }
 
   priceBuyMapDepth: {

@@ -44,7 +44,7 @@ export class TvChartContainerComponent implements OnDestroy, AfterViewInit {
     down: '#f23645',
   };
 
-  private _symbol = 'BTCUSDT';
+  private _symbol = 'ADAUSDT';
   private _interval: ChartingLibraryWidgetOptions['interval'] =
     '1' as ResolutionString;
   // BEWARE: no trailing slash is expected in feed URL
@@ -111,17 +111,8 @@ export class TvChartContainerComponent implements OnDestroy, AfterViewInit {
     this._autosize = autosize || this._autosize;
   }
 
-  constructor(private stopKillerService: StopKillerService) {}
+  constructor() {}
   ngAfterViewInit(): void {
-    function getLanguageFromURL(): LanguageCode | null {
-      const regex = new RegExp('[?&]lang=([^&#]*)');
-      const results = regex.exec(location.search);
-
-      return results === null
-        ? null
-        : (decodeURIComponent(results[1].replace(/\+/g, ' ')) as LanguageCode);
-    }
-
     const widgetOptions: ChartingLibraryWidgetOptions = {
       symbol: this._symbol,
       debug: false,
@@ -129,7 +120,7 @@ export class TvChartContainerComponent implements OnDestroy, AfterViewInit {
       interval: this._interval,
       container: this.containerId,
       library_path: this._libraryPath,
-      locale: getLanguageFromURL() || 'en',
+      locale: 'en',
       disabled_features: ['popup_hints', 'header_saveload'],
       enabled_features: [
         'study_templates',
@@ -162,196 +153,23 @@ export class TvChartContainerComponent implements OnDestroy, AfterViewInit {
           pairTrading(PineJS),
         ]);
       },
-      // custom_css_url: '../chart.css',
-      // custom_indicators_getter: customIndicators,
     };
 
     this._tvWidget = new widget(widgetOptions);
-
-    this._tvWidget.headerReady().then(() => {
-      if (this._tvWidget) {
-        this._tvWidget.addCustomCSSFile(
-          'https://kit.fontawesome.com/b1b2e78000.css'
-        );
-        this._tvWidget.addCustomCSSFile('../chart.css');
-        const button = this._tvWidget.createButton();
-        button.setAttribute('title', 'My custom button tooltip');
-        button.addEventListener('click', function () {
-          alert('My custom button pressed!');
-        });
-        button.textContent = 'My custom button caption';
-        button.innerHTML =
-          '<i class=" font-white fa-light fa-face-awesome"></i>';
-      }
-    });
-
     this._tvWidget.onChartReady(() => {
       this._tvWidget?.applyOverrides({
         'paneProperties.background': '#1D1D1D',
         'paneProperties.backgroundType': 'solid',
       });
-      this.getStopKillerShapes(this._tvWidget?.chart(), this._symbol);
-      this._tvWidget
-        ?.chart()
-        .onSymbolChanged()
-        .subscribe(null, () => {
-          let symbol = this._tvWidget?.chart().symbol();
-          if (symbol) {
-            if (symbol.indexOf('BINANCE:') === 0) {
-              symbol = symbol.replace('BINANCE:', '');
-            }
-
-            this.getStopKillerShapes(this._tvWidget?.chart(), symbol);
-
-            this._symbol = symbol;
-          }
-        });
-      this._tvWidget
-        ?.chart()
-        .onIntervalChanged()
-        .subscribe(null, (interval) => {
-          this._interval = interval;
-          this.getStopKillerShapes(this._tvWidget?.chart(), this._symbol);
-
-          this._interval = interval;
-        });
+      this._tvWidget?.chart().createStudy('Manipulation Monitor', false, false);
+    
     });
   }
 
-  priceBuyMapDepth: {
-    [key: string]: {
-      price: number;
-      volume: number;
-      color: string;
-      startTime: number;
-      endTime: number;
-      entityID?: EntityId;
-    };
-  } = {};
-  priceSellMapDepth: {
-    [key: string]: {
-      price: number;
-      volume: number;
-      color: string;
-      startTime: number;
-      endTime: number;
-      entityID?: EntityId;
-    };
-  } = {};
-
-  updateDepthMap(data: IBinanceDepth) {
-    this.cleanDepthMap(data);
-    for (let [price, volume] of data.a) {
-      if (this.priceBuyMapDepth[price]) {
-        this.priceBuyMapDepth[price].endTime = data.E / 1000;
-      } else {
-        this.priceBuyMapDepth[price] = {
-          color: this.barColors.up,
-          price: parseFloat(price),
-          volume: parseFloat(volume),
-          startTime: data.E / 1000,
-          endTime: data.E / 1000,
-        };
-      }
-    }
-    for (let [price, volume] of data.b) {
-      if (this.priceSellMapDepth[price]) {
-        this.priceSellMapDepth[price].endTime = data.E / 1000;
-      } else {
-        this.priceSellMapDepth[price] = {
-          color: this.barColors.down,
-          price: parseFloat(price),
-          volume: parseFloat(volume),
-          startTime: data.E / 1000,
-          endTime: data.E / 1000,
-        };
-      }
-    }
-  }
-
   ngOnDestroy() {
-    this.subscriptions.forEach((e) => e.unsubscribe());
     if (this._tvWidget !== null) {
       this._tvWidget.remove();
       this._tvWidget = null;
     }
-  }
-
-  private cleanDepthMap(data: IBinanceDepth) {
-    const pricesBuy = data.a.map((value) => {
-      return value[0];
-    });
-    const pricesSell = data.b.map((value) => {
-      return value[0];
-    });
-    forEach(this.priceBuyMapDepth, (value, key) => {
-      if (!pricesBuy.includes(key)) {
-        this.removeLine(value.entityID);
-        delete this.priceBuyMapDepth[key];
-      }
-    });
-    forEach(this.priceSellMapDepth, (value, key) => {
-      if (!pricesSell.includes(key)) {
-        this.removeLine(value.entityID);
-        delete this.priceSellMapDepth[key];
-      }
-    });
-  }
-
-  private removeLine(entityID: EntityId | undefined) {
-    if (entityID) {
-      this._tvWidget?.chart().removeEntity(entityID);
-    }
-  }
-
-  private getStopKillerShapes(
-    chart: IChartWidgetApi | undefined,
-    symbol: string
-  ) {
-    if (!(this._interval == '1' || this._interval == '5')) {
-      console.log('interval is not supported', this._interval);
-      chart?.getAllShapes().forEach((shape) => {
-        chart?.removeEntity(shape.id);
-      });
-      return;
-    }
-
-    chart?.getAllShapes().forEach((shape) => {
-      chart?.removeEntity(shape.id);
-    });
-    let range = chart?.getVisibleRange();
-    this.stopKillerService
-      .getWithParams({
-        symbol: symbol,
-        startTime: Number(range?.from) * 1000,
-        endTime: Number(range?.to) * 1000,
-      })
-      .subscribe((data) => {
-        console.log('stop killer data', data);
-
-        if (data.length > 0) {
-          data.forEach((sk: IStopKiller) => {
-            chart?.createShape(
-              {
-                time: Math.floor(sk.timestamp / 1000),
-                price: sk.price,
-                // channel: sk.side === 'UP' ? 'high' : 'low',
-              },
-              {
-                shape: sk.side === 'DOWN' ? 'arrow_up' : 'arrow_down',
-                lock: true,
-                overrides: {
-                  color: '#ffffff',
-                  fontsize: 9,
-                },
-                showInObjectsTree: false,
-                filled: true,
-                text: `${sk.price}`,
-                zOrder: 'top',
-              }
-            );
-          });
-        }
-      });
   }
 }
